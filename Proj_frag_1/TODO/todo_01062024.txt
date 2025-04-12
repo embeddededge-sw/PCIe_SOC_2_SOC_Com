@@ -1,0 +1,14 @@
+
+
+
+TODO: -
+======
+1. set CONFIG_PCI_EPF_TEST=y instead of building as module. 
+
+2. Add prints in the probe of the pci_endpoint_test and let us see where the probe fails.
+
+3. Remove the parent bridge, for example - 0000\:00\:1d.0. To get the bridge run lspci -tvv.
+
+	echo 1 > /sys/bus/pci/devices/0000\:00\:1d.0/remove 
+
+	echo 1 > /sys/bus/pci/rescan

@@ -1,0 +1,10 @@
+
+
+
+Note: - Below structure has been introduced with PCIe EP framework from Kernel version 6.3.1.
+
+
+struct pci_epc_event_ops {
+	int (*core_init)(struct pci_epf *epf);
+	int (*link_up)(struct pci_epf *epf);
+};

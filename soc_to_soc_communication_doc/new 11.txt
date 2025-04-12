@@ -1,0 +1,8 @@
+
+
+
+am335x-bone-common.dtsi
+
+am335x-boneblack.dts
+
+am335x-bone.dts

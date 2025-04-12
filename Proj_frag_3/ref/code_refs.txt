@@ -1,0 +1,15 @@
+
+
+	/drivers/net/dummy.c
+	
+	
+	https://www.spinics.net/lists/linux-pci/msg109081.html
+		
+		EPF code: -
+		https://nv-tegra.nvidia.com/r/gitweb?p=linux-nvidia.git;a=blob;f=drivers/pci/endpoint/functions/pci-epf-tegra-vnet.c;h=f55790f8c569368ad6012aeb9726b9a6c08c5304
+		
+		RC code: -
+		https://nv-tegra.nvidia.com/r/gitweb?p=linux-nvidia.git;a=blob;f=drivers/net/ethernet/nvidia/pcie/tegra_vnet.c;h=af74baae1452fea25c3c5292a36a4cd1d8f22e50;hb=6dc57fec39c444e4c4448be61ddd19c55693daf1
+		
+	
+	Linux kernel version - 6.1.83

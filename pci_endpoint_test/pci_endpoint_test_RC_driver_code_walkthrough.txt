@@ -1,0 +1,159 @@
+
+PCI TEST APP invokes -> PCITEST_MSI -> 
+
+
+#define PCI_ENDPOINT_TEST_COMMAND		0x4
+#define COMMAND_RAISE_INTX_IRQ			BIT(0)
+#define COMMAND_RAISE_MSI_IRQ			BIT(1)
+#define COMMAND_RAISE_MSIX_IRQ			BIT(2)
+#define COMMAND_READ				BIT(3)
+#define COMMAND_WRITE				BIT(4)
+#define COMMAND_COPY				BIT(5)
+
+#define PCI_ENDPOINT_TEST_IRQ_TYPE		0x24
+#define PCI_ENDPOINT_TEST_IRQ_NUMBER	0x28
+
+#define PCI_ENDPOINT_TEST_STATUS	0x8
+#define STATUS_IRQ_RAISED			BIT(6)
+
+-------------------------------------------------------------------------
+static long pci_endpoint_test_ioctl(struct file *file, unsigned int cmd,
+				    unsigned long arg)
+{
+	case PCITEST_MSI:
+	case PCITEST_MSIX:
+		ret = pci_endpoint_test_msi_irq(test, arg, cmd == PCITEST_MSIX);
+		break;
+}
+
+--------------------------------------------------------------------------
+
+static bool pci_endpoint_test_msi_irq(struct pci_endpoint_test *test,
+				       u16 msi_num, bool msix)
+{
+	u32 val;
+	struct pci_dev *pdev = test->pdev;
+
+	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_IRQ_TYPE,
+				 msix ? IRQ_TYPE_MSIX : IRQ_TYPE_MSI);
+				 
+	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_IRQ_NUMBER, msi_num);
+	
+	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_COMMAND,
+				 msix ? COMMAND_RAISE_MSIX_IRQ :
+				 COMMAND_RAISE_MSI_IRQ);
+				 
+	val = wait_for_completion_timeout(&test->irq_raised,
+					  msecs_to_jiffies(1000));
+	if (!val)
+		return false;
+
+	return pci_irq_vector(pdev, msi_num - 1) == test->last_irq;
+}
+
+--------------------------------------------------------------------------------
+static irqreturn_t pci_endpoint_test_irqhandler(int irq, void *dev_id)
+{
+	struct pci_endpoint_test *test = dev_id;
+	u32 reg;
+
+	reg = pci_endpoint_test_readl(test, PCI_ENDPOINT_TEST_STATUS);
+	if (reg & STATUS_IRQ_RAISED) {
+		test->last_irq = irq;
+		complete(&test->irq_raised);
+	}
+
+	return IRQ_HANDLED;
+}
+
+--------------------------------------------------------------------------------
+static inline u32 pci_endpoint_test_readl(struct pci_endpoint_test *test,
+					  u32 offset)
+{
+	return readl(test->base + offset);
+}
+
+static inline void pci_endpoint_test_writel(struct pci_endpoint_test *test,
+					    u32 offset, u32 value)
+{
+	writel(value, test->base + offset);
+}
+
+--------------------------------------------------------------------------------
+
+static int pci_endpoint_test_probe(struct pci_dev *pdev,
+				   const struct pci_device_id *ent)
+{
+	enum pci_barno test_reg_bar = BAR_0; //i.e. 0
+	//....
+	
+	for (bar = 0; bar < PCI_STD_NUM_BARS; bar++) {
+		if (pci_resource_flags(pdev, bar) & IORESOURCE_MEM) {
+			base = pci_ioremap_bar(pdev, bar);
+			if (!base) {
+				dev_err(dev, "Failed to read BAR%d\n", bar);
+				WARN_ON(bar == test_reg_bar);
+			}
+			test->bar[bar] = base;
+		}
+	}
+
+	test->base = test->bar[test_reg_bar];
+	if (!test->base) {
+		err = -ENOMEM;
+		dev_err(dev, "Cannot perform PCI test without BAR%d\n",
+			test_reg_bar);
+		goto err_iounmap;
+	}
+	
+	//....
+}
+
+--------------------------------------------------------------------------------
+
+#################################################################################
+PCIe Endpoint Function driver: pci-epf-test.c
+#################################################################################
+
+static void pci_epf_test_cmd_handler(struct work_struct *work)
+{
+	u32 command;
+	struct pci_epf_test *epf_test = container_of(work, struct pci_epf_test,
+						     cmd_handler.work);
+	struct pci_epf *epf = epf_test->epf;
+	struct device *dev = &epf->dev;
+	enum pci_barno test_reg_bar = epf_test->test_reg_bar;
+	struct pci_epf_test_reg *reg = epf_test->reg[test_reg_bar];
+
+	command = READ_ONCE(reg->command);
+	if (!command)
+		goto reset_handler;
+
+	WRITE_ONCE(reg->command, 0);
+	WRITE_ONCE(reg->status, 0);
+	
+	//....
+	switch (command) {
+	case COMMAND_RAISE_INTX_IRQ:
+	case COMMAND_RAISE_MSI_IRQ:
+	case COMMAND_RAISE_MSIX_IRQ:
+		pci_epf_test_raise_irq(epf_test, reg);
+		break;
+	case COMMAND_WRITE:
+		pci_epf_test_write(epf_test, reg);
+		pci_epf_test_raise_irq(epf_test, reg);
+		break;
+	case COMMAND_READ:
+		pci_epf_test_read(epf_test, reg);
+		pci_epf_test_raise_irq(epf_test, reg);
+		break;
+	case COMMAND_COPY:
+		pci_epf_test_copy(epf_test, reg);
+		pci_epf_test_raise_irq(epf_test, reg);
+		break;
+	default:
+		dev_err(dev, "Invalid command 0x%x\n", command);
+		break;
+	}
+	//...
+}

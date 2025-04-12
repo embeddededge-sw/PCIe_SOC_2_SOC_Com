@@ -1,0 +1,39 @@
+
+
+
+
+
+
+	/* Register network device */
+	ndev = alloc_etherdev(0);
+	if (!ndev) {
+			dev_err(fdev, "alloc_etherdev() failed\n");
+			ret = -ENOMEM;
+			goto free_pci_mem;
+	}
+
+	eth_hw_addr_random(ndev);
+	tvnet->ndev = ndev;
+	SET_NETDEV_DEV(ndev, fdev);
+	ndev->netdev_ops = &tvnet_netdev_ops;
+	netif_napi_add(ndev, &tvnet->napi, tvnet_ep_poll, TVNET_NAPI_WEIGHT);
+
+	ndev->mtu = TVNET_DEFAULT_MTU;
+
+	ret = register_netdev(ndev);
+	if (ret < 0) {
+			dev_err(fdev, "register_netdev() failed: %d\n", ret);
+			goto fail_free_netdev;
+	}
+	netif_carrier_off(ndev);
+
+
+
+
+/* Set the sysfs physical device reference for the network logical device
+ * if set prior to registration will cause a symlink during initialization.
+ */
+#define SET_NETDEV_DEV(net, pdev)	((net)->dev.parent = (pdev))
+
+
+SET_NETDEV_DEV(net, &epf->dev);

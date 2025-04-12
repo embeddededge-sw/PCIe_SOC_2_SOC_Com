@@ -1,0 +1,55 @@
+
+
+Kernel source build guide: -
+------------------------------
+Referernce: - https://software-dl.ti.com/processor-sdk-linux/esd/AM64X/08_05_00_21/exports/docs/linux/Foundational_Components_Kernel_Users_Guide.html
+
+
+Building kernel: -
+-------------------------
+## Go to path of linux kernel in installed SDK –
+cd /home/mir/My_Workspace/TMDS64EVM/TMDS64EVM_SDK_Install/SDK_Install_Path/board-support/ti-linux-kernel-6.1.46+gitAUTOINC+247b2535b2-g247b2535b2
+
+# Export Tool chain path
+export PATH=/home/mir/My_Workspace/Cross_Compiler/arm-gnu-toolchain-11.3.rel1-x86_64-aarch64-none-linux-gnu/bin:$PATH
+
+# make ARCH=arm64 CROSS_COMPILE=aarch64-none-linux-gnu- distclean
+# make ARCH=arm64 CROSS_COMPILE=aarch64-none-linux-gnu- defconfig
+
+##For RC
+make ARCH=arm64 CROSS_COMPILE=aarch64-none-linux-gnu- defconfig ti_am64x_pcie_rc.config
+
+
+## For EP
+make ARCH=arm64 CROSS_COMPILE=aarch64-none-linux-gnu- defconfig ti_am64x_pcie_ep.config
+
+Or
+
+# make ARCH=arm64 CROSS_COMPILE=aarch64-none-linux-gnu- tisdk_am64xx-evm_defconfig
+
+## To customize run menuconfig
+make ARCH=arm64 CROSS_COMPILE=aarch64-none-linux-gnu- menuconfig
+
+## Build Kernel Image
+make ARCH=arm64 CROSS_COMPILE=aarch64-none-linux-gnu- Image
+
+## Build DTS
+# AM64x EVM -> k3-am642-evm.dts
+make ARCH=arm64 CROSS_COMPILE=aarch64-none-linux-gnu- ti/k3-am642-evm.dtb
+# make ARCH=arm64 CROSS_COMPILE=aarch64-none-linux-gnu- dtbs
+
+## Build Modules
+make ARCH=arm64 CROSS_COMPILE=aarch64-none-linux-gnu- modules
+
+## Installing the kernel to SD card
+
+cd /home/mir/My_Workspace/TMDS64EVM/TMDS64EVM_SDK_Install/SDK_Install_Path/board-support/ti-linux-kernel-6.1.46+gitAUTOINC+247b2535b2-g247b2535b2
+
+mount /dev/sdb2 /mnt
+sudo cp arch/arm64/boot/Image /mnt/boot
+sudo cp arch/arm64/boot/dts/ti/k3-am642-evm.dtb  /mnt/boot/dtb/ti
+sudo make ARCH=arm64 INSTALL_MOD_PATH=/mnt  modules_install
+
+Note: - 
+Append INSTALL_MOD_STRIP=1 to the make modules_install command to reduce the size of the resulting installation
+

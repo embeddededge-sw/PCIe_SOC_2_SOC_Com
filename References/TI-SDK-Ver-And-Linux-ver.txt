@@ -1,0 +1,5 @@
+
+
+
+	TI SDK Version - 09.01.00.08
+	Linux Kernel Version - 6.1.46

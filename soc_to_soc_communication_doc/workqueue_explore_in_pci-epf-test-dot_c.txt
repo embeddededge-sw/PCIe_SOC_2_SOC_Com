@@ -1,0 +1,60 @@
+
+static struct workqueue_struct *kpcitest_workqueue;
+
+struct pci_epf_test {
+	//...
+	struct delayed_work	cmd_handler;
+	//...
+};
+
+static int __init pci_epf_test_init(void)
+{
+	//...
+	kpcitest_workqueue = alloc_workqueue("kpcitest",
+					     WQ_MEM_RECLAIM | WQ_HIGHPRI, 0);
+	//...
+}
+
+queue_delayed_work(kpcitest_workqueue, &epf_test->cmd_handler,
+			   msecs_to_jiffies(1));
+			   
+queue_work(kpcitest_workqueue, &epf_test->cmd_handler.work);
+
+
+static int pci_epf_test_probe(struct pci_epf *epf,
+                              const struct pci_epf_device_id *id)
+{
+	//...
+	INIT_DELAYED_WORK(&epf_test->cmd_handler, pci_epf_test_cmd_handler);
+	//...
+}
+
+
+static void pci_epf_test_cmd_handler(struct work_struct *work)
+{
+
+	//...
+	command = reg->command;
+	if (!command)
+		goto reset_handler;
+		
+	reset_handler:
+		queue_delayed_work(kpcitest_workqueue, &epf_test->cmd_handler,
+			   msecs_to_jiffies(1));
+}
+
+static int pci_epf_test_bind(struct pci_epf *epf)
+{
+	//...
+	if (linkup_notifier) {
+		epf->nb.notifier_call = pci_epf_test_notifier;
+		pci_epc_register_notifier(epc, &epf->nb);
+	} else {
+		queue_work(kpcitest_workqueue, &epf_test->cmd_handler.work);
+	}
+}
+
+To know: -
+-----------
+
+struct notifier_block   nb;

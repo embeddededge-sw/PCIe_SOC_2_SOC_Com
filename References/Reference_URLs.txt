@@ -1,0 +1,37 @@
+
+
+1. TI
+	https://software-dl.ti.com/jacinto7/esd/processor-sdk-linux-jacinto7/latest/exports/docs/linux/Foundational_Components/Kernel/Kernel_Drivers/PCIe/PCIe_End_Point.html
+
+2. 
+	https://community.nxp.com/t5/Processor-Expert-Software/LS1028A-SoC-to-SoC-communication-between-two-boards-via-PCIe/td-p/1642980
+
+3. ti dts and config settings: -
+	https://e2e.ti.com/support/processors-group/processors/f/processors-forum/1266140/tmds64evm-pcie-boot-from-pcie-is-not-working
+	
+	
+4. VVI (am64x pcie enable doc)
+	https://software-dl.ti.com/processor-sdk-linux/esd/AM64X/latest/exports/docs/linux/Foundational_Components/Kernel/Kernel_Drivers/PCIe/PCIe_End_Point.html
+
+
+5. am64x pcie rc: -
+	https://software-dl.ti.com/processor-sdk-linux/esd/AM64X/latest/exports/docs/linux/Foundational_Components/Kernel/Kernel_Drivers/PCIe/PCIe_Root_Complex.html
+	
+	
+6. VVI (From, Renesas)
+	https://github.com/renesas-rz/rzg2-pcie-endpoint
+
+7. Kernel documentation for pcie_endpoint_test device: -
+	
+	kernel/Documentation/PCI/endpoint/pci-test-function.rst
+	
+	kernel/Documentation/PCI/endpoint/pci-test-howto.rst
+	
+	
+	[ By Kishon Vijay Abraham]	
+	
+8. Linux PCI Endpoint Framework: -
+	https://www.kernel.org/doc/html/v5.4/PCI/endpoint/pci-endpoint.html#:~:text=1.-,PCI%20Endpoint%20Controller(EPC)%20Library,implement%20a%20particular%20endpoint%20function.
+	
+
+	
